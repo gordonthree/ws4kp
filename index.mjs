@@ -91,6 +91,7 @@ if (process.env?.DIST === '1') {
 	app.get('/index.html', index);
 	app.use('/geoip', geoip);
 	app.get('/', index);
+	app.use('/datagenerators/radarmaps', express.static('datagenerators/radarmaps'));
 	app.get('*name', express.static('./server'));
 }
 

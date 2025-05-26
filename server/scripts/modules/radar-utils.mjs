@@ -77,9 +77,9 @@ const removeDopplerRadarImageNoise = (RadarContext) => {
 
 		// is this pixel the old rgb?
 		if ((R === 0 && G === 0 && B === 0)
-					|| (R === 0 && G === 236 && B === 236)
-					|| (R === 1 && G === 160 && B === 246)
-					|| (R === 0 && G === 0 && B === 246)) {
+			|| (R === 0 && G === 236 && B === 236)
+			|| (R === 1 && G === 160 && B === 246)
+			|| (R === 0 && G === 0 && B === 246)) {
 			// change to your new rgb
 
 			// Transparent
@@ -124,14 +124,14 @@ const removeDopplerRadarImageNoise = (RadarContext) => {
 			B = 19;
 			A = 255;
 		} else if ((R === 214 && G === 0 && B === 0)
-					|| (R === 255 && G === 0 && B === 0)) {
+			|| (R === 255 && G === 0 && B === 0)) {
 			// Red
 			R = 171;
 			G = 14;
 			B = 14;
 			A = 255;
 		} else if ((R === 192 && G === 0 && B === 0)
-					|| (R === 255 && G === 0 && B === 255)) {
+			|| (R === 255 && G === 0 && B === 255)) {
 			// Brown
 			R = 115;
 			G = 31;
@@ -148,38 +148,8 @@ const removeDopplerRadarImageNoise = (RadarContext) => {
 	RadarContext.putImageData(RadarImageData, 0, 0);
 };
 
-const mergeDopplerRadarImage = (mapContext, radarContext) => {
-	const mapImageData = mapContext.getImageData(0, 0, mapContext.canvas.width, mapContext.canvas.height);
-	const radarImageData = radarContext.getImageData(0, 0, radarContext.canvas.width, radarContext.canvas.height);
-
-	// examine every pixel,
-	// change any old rgb to the new-rgb
-	for (let i = 0; i < radarImageData.data.length; i += 4) {
-		// i + 0 = red
-		// i + 1 = green
-		// i + 2 = blue
-		// i + 3 = alpha (0 = transparent, 255 = opaque)
-
-		// is this pixel the old rgb?
-		if ((mapImageData.data[i] < 116 && mapImageData.data[i + 1] < 116 && mapImageData.data[i + 2] < 116)) {
-			// change to your new rgb
-
-			// Transparent
-			radarImageData.data[i] = 0;
-			radarImageData.data[i + 1] = 0;
-			radarImageData.data[i + 2] = 0;
-			radarImageData.data[i + 3] = 0;
-		}
-	}
-
-	radarContext.putImageData(radarImageData, 0, 0);
-
-	mapContext.drawImage(radarContext.canvas, 0, 0);
-};
-
 export {
 	getXYFromLatitudeLongitudeDoppler,
 	getXYFromLatitudeLongitudeMap,
 	removeDopplerRadarImageNoise,
-	mergeDopplerRadarImage,
 };
