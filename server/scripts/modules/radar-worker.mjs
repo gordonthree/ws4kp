@@ -9,27 +9,15 @@ const fetchAsBlob = async (url) => {
 };
 
 const baseMapImages = new Promise((resolve) => {
-	fetchAsBlob('/images/maps/radar.webp').then((blob) => {
-		createImageBitmap(blob).then((imageBitmap) => {
-			// extract the black pixels to overlay on to the final image (boundaries)
-			const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-			const context = canvas.getContext('2d');
-			context.drawImage(imageBitmap, 0, 0);
-			const imageData = context.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
-
-			// go through the image data and preserve the black pixels, making the rest transparent
-			for (let i = 0; i < imageData.data.length; i += 4) {
-				if (imageData.data[i + 0] >= 116 || imageData.data[i + 1] >= 116 || imageData.data[i + 2] >= 116) {
-					// make it transparent
-					imageData.data[i + 3] = 0;
-				}
-			}
-			// write the image data back
-			context.putImageData(imageData, 0, 0);
-
-			resolve({
-				fullMap: imageBitmap,
-				overlay: canvas,
+	fetchAsBlob('/images/maps/radar-stretched.webp').then((blob) => {
+		createImageBitmap(blob).then((fullMap) => {
+			fetchAsBlob('/images/maps/radar-stretched-overlay.webp').then((overlayBlob) => {
+				createImageBitmap(overlayBlob).then((overlay) => {
+					resolve({
+						fullMap,
+						overlay,
+					});
+				});
 			});
 		});
 	});
@@ -37,7 +25,7 @@ const baseMapImages = new Promise((resolve) => {
 
 onmessage = async (e) => {
 	const {
-		url, RADAR_HOST, OVERRIDES, radarSourceXY, sourceXY, offsetX, offsetY,
+		url, RADAR_HOST, OVERRIDES, radarSourceXY, sourceXY,
 	} = e.data;
 
 	// get the image
@@ -65,7 +53,7 @@ onmessage = async (e) => {
 
 	// get the base map
 	const baseMaps = await baseMapImages;
-	baseContext.drawImage(baseMaps.fullMap, sourceXY.x, sourceXY.y, offsetX * 2, offsetY * 2, 0, 0, radarFinalSize.width, radarFinalSize.height);
+	baseContext.drawImage(baseMaps.fullMap, sourceXY.x, sourceXY.y, radarFinalSize.width, radarFinalSize.height);
 
 	// test response
 	const radarResponse = await radarResponsePromise;
@@ -86,6 +74,10 @@ onmessage = async (e) => {
 	croppedRadarContext.imageSmoothingEnabled = false;
 	croppedRadarContext.drawImage(radarCanvas, radarSource.x, radarSource.y, croppedRadarCanvas.width, croppedRadarCanvas.height, 0, 0, croppedRadarCanvas.width, croppedRadarCanvas.height);
 
+	const im = radarCanvas.transferToImageBitmap();
+	postMessage(im, [im]);
+	return;
+
 	// clean the image
 	utils.removeDopplerRadarImageNoise(croppedRadarContext);
 
@@ -98,7 +90,7 @@ onmessage = async (e) => {
 	// put the radar on the base map
 	baseContext.drawImage(stretchCanvas, 0, 0);
 	// put the road/boundaries overlay on the map
-	baseContext.drawImage(baseMaps.overlay, sourceXY.x, sourceXY.y, offsetX * 2, offsetY * 2, 0, 0, radarFinalSize.width, radarFinalSize.height);
+	baseContext.drawImage(baseMaps.overlay, sourceXY.x, sourceXY.y, radarFinalSize.width, radarFinalSize.height);
 
 	const processedRadar = baseCanvas.transferToImageBitmap();
 
